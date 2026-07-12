@@ -193,6 +193,14 @@ tr:nth-child(even) td{background:#fbfaf7;}
 .small-muted{font-size:11.8px;color:var(--muted);}
 .avg-cell{font-weight:700;color:var(--teal);}
 .pill-fase{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#eee7ff;color:#5b3ed6;}
+.avatar-img{width:64px;height:64px;border-radius:16px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line);}
+.logo-img{height:52px;width:auto;max-width:90px;object-fit:contain;}
+.upload-box{border:1.5px dashed var(--line);border-radius:12px;padding:14px;text-align:center;}
+.upload-preview{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-bottom:14px;border-bottom:2px solid var(--ink);}
+.letterhead .lh-text{flex:1;}
+.letterhead h2{margin:0;font-size:16px;letter-spacing:.3px;}
+.letterhead p{margin:2px 0 0;font-size:12px;color:var(--muted);}
 .loading-screen{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:200;}
 .spinner{width:34px;height:34px;border:3px solid #e6e2d8;border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -246,7 +254,7 @@ function defaultState(){
   return {
     settings:{
       namaGuru:'', nip:'', jabatan:'Guru Produktif DKV', sekolah:'', tahunAjaran:'2026/2027', semester:'Ganjil',
-      programKeahlian:'Desain Komunikasi Visual (DKV)'
+      programKeahlian:'Desain Komunikasi Visual (DKV)', fotoGuru:'', logoSekolah:''
     },
     kelas:[],      // {id, nama, tingkat(X/XI/XII), wali, fase, mapel}
     siswa:{},      // kelasId -> [{id,no,nis,nisn,nama,lp}]
@@ -284,6 +292,49 @@ function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ---- Image upload helpers (compressed to keep storage small) ---- */
+function compressImage(file, maxDim, quality, cb){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width, h=img.height;
+      if(w>h && w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; }
+      else if(h>=w && h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      cb(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>toast('Gagal membaca gambar');
+    img.src=e.target.result;
+  };
+  reader.onerror=()=>toast('Gagal membaca berkas');
+  reader.readAsDataURL(file);
+}
+function handleFotoGuru(input){
+  const file=input.files[0]; if(!file) return;
+  compressImage(file,400,0.85,dataUrl=>{
+    state.settings.fotoGuru=dataUrl; saveState(true); render();
+  });
+  input.value='';
+}
+function hapusFotoGuru(){
+  state.settings.fotoGuru=''; saveState(true); render();
+}
+function handleLogoSekolah(input){
+  const file=input.files[0]; if(!file) return;
+  compressImage(file,300,0.9,dataUrl=>{
+    state.settings.logoSekolah=dataUrl; saveState(true); render();
+  });
+  input.value='';
+}
+function hapusLogoSekolah(){
+  state.settings.logoSekolah=''; saveState(true); render();
 }
 
 /* ============================ NAV ============================ */
@@ -393,11 +444,13 @@ function renderBeranda(c){
   c.innerHTML = `
   <div class="card">
     <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-      <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#231e0f;font-weight:800;font-size:22px;flex:0 0 auto">${initials}</div>
+      ${s.fotoGuru?`<img src="${s.fotoGuru}" class="avatar-img">`:
+        `<div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#231e0f;font-weight:800;font-size:22px;flex:0 0 auto">${initials}</div>`}
       <div style="flex:1;min-width:220px">
         <h3 style="margin:0 0 3px;font-size:19px">${s.namaGuru||'Nama Guru belum diisi'}</h3>
         <div class="small-muted">${s.jabatan||'Guru'} · ${s.programKeahlian}</div>
       </div>
+      ${s.logoSekolah?`<img src="${s.logoSekolah}" class="logo-img">`:''}
       <button class="btn-ghost btn-sm no-print" onclick="currentTab='pengaturan';render()">Edit Profil</button>
     </div>
     <div class="grid cols-4" style="margin-top:16px">
@@ -1135,7 +1188,22 @@ function hapusAnekdot(id){
 let rekapKelas=null, rekapBulan=todayStr().slice(0,7);
 function renderRekap(c){
   if(!rekapKelas && state.kelas.length) rekapKelas=state.kelas[0].id;
+  const s=state.settings;
   c.innerHTML=`
+  <div class="card">
+    <div class="letterhead">
+      ${s.logoSekolah?`<img src="${s.logoSekolah}" class="logo-img">`:''}
+      <div class="lh-text">
+        <h2>${s.sekolah||'Nama Sekolah belum diisi'}</h2>
+        <p>Program Keahlian ${s.programKeahlian} · Tahun Pelajaran ${s.tahunAjaran} · Semester ${s.semester}</p>
+      </div>
+      ${s.fotoGuru?`<img src="${s.fotoGuru}" class="avatar-img">`:''}
+      <div class="lh-text" style="flex:0 0 auto;text-align:right">
+        <h2 style="font-size:13px">${s.namaGuru||'-'}</h2>
+        <p>${s.jabatan||'-'}${s.nip?' · NIP '+s.nip:''}</p>
+      </div>
+    </div>
+  </div>
   <div class="card no-print">
     <div class="grid cols-3">
       <div class="field"><label>Pilih Kelas</label><select id="selKelasR" onchange="rekapKelas=this.value;render()">${kelasOptions(rekapKelas)}</select></div>
@@ -1225,6 +1293,39 @@ function renderPengaturan(c){
   </div>
 
   <div class="card">
+    <h3>Foto Profil & Logo Sekolah</h3>
+    <div class="desc">Digunakan untuk tampilan profil di Beranda dan kop cetak pada menu Rekap & Cetak.</div>
+    <div class="grid cols-2">
+      <div>
+        <label>Foto Guru</label>
+        <div class="upload-box">
+          <div class="upload-preview" style="justify-content:center">
+            ${s.fotoGuru?`<img src="${s.fotoGuru}" class="avatar-img">`:`<div class="small-muted">Belum ada foto</div>`}
+          </div>
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn-ghost btn-sm" onclick="document.getElementById('fileFoto').click()">Unggah Foto</button>
+            ${s.fotoGuru?`<button class="btn-danger btn-sm" onclick="hapusFotoGuru()">Hapus</button>`:''}
+          </div>
+          <input type="file" id="fileFoto" accept="image/*" style="display:none" onchange="handleFotoGuru(this)">
+        </div>
+      </div>
+      <div>
+        <label>Logo Sekolah</label>
+        <div class="upload-box">
+          <div class="upload-preview" style="justify-content:center">
+            ${s.logoSekolah?`<img src="${s.logoSekolah}" class="logo-img">`:`<div class="small-muted">Belum ada logo</div>`}
+          </div>
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn-ghost btn-sm" onclick="document.getElementById('fileLogo').click()">Unggah Logo</button>
+            ${s.logoSekolah?`<button class="btn-danger btn-sm" onclick="hapusLogoSekolah()">Hapus</button>`:''}
+          </div>
+          <input type="file" id="fileLogo" accept="image/*" style="display:none" onchange="handleLogoSekolah(this)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <h3>Mata Pelajaran per Fase</h3>
     <ul class="stat-list">
       <li><span>Kelas X · Fase E</span><span>Dasar-dasar Keahlian DKV</span></li>
@@ -1291,3 +1392,4 @@ function resetData(){
 </script>
 </body>
 </html>
+
