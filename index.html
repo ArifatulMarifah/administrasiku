@@ -245,7 +245,7 @@ function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).s
 function defaultState(){
   return {
     settings:{
-      namaGuru:'', nip:'', sekolah:'', tahunAjaran:'2026/2027', semester:'Ganjil',
+      namaGuru:'', nip:'', jabatan:'Guru Produktif DKV', sekolah:'', tahunAjaran:'2026/2027', semester:'Ganjil',
       programKeahlian:'Desain Komunikasi Visual (DKV)'
     },
     kelas:[],      // {id, nama, tingkat(X/XI/XII), wali, fase, mapel}
@@ -254,7 +254,10 @@ function defaultState(){
     absensi:{},    // kelasId -> { 'yyyy-mm-dd': {siswaId: 'H'|'S'|'I'|'A'} }
     nilai:{},      // kelasId -> { komponenId: {siswaId: nilai} }
     komponenNilai:{}, // kelasId -> [{id,nama,tanggal}]
-    jurnal:[]      // {id,no,hari,tanggal,jamKe,kelasId,tujuan,pelaksanaan,sumber,tidakHadir:{a,i,s},jmlHadir,catatan}
+    jurnal:[],     // {id,no,hari,tanggal,jamKe,kelasId,tujuan,pelaksanaan,sumber,tidakHadir:{a,i,s},jmlHadir,catatan}
+    jadwalMengajar:[], // {id, hari, jamKe, kelasId}
+    refleksi:[],   // {id, tanggal, kelasId, hasilBaik, kendala, tindakLanjut, catatan}
+    anekdot:[]     // {id, tanggal, kelasId, siswaId, namaSiswa, kategori, kejadian, tindakLanjut}
   };
 }
 
@@ -291,6 +294,8 @@ const NAV = [
   {id:'absensi', ic:'✅', label:'Absensi Siswa'},
   {id:'nilai', ic:'📝', label:'Daftar Nilai'},
   {id:'jurnal', ic:'📔', label:'Jurnal Mengajar'},
+  {id:'refleksi', ic:'💭', label:'Refleksi Mengajar'},
+  {id:'anekdot', ic:'🗒️', label:'Anekdot Murid'},
   {id:'rekap', ic:'🖨️', label:'Rekap & Cetak'},
   {id:'pengaturan', ic:'⚙️', label:'Pengaturan'},
 ];
@@ -315,6 +320,8 @@ const TITLES = {
   absensi:['Absensi Siswa','Catat kehadiran siswa per kelas dan tanggal'],
   nilai:['Daftar Nilai','Kelola komponen dan nilai siswa per kelas'],
   jurnal:['Jurnal Mengajar','Buku agenda mengajar harian'],
+  refleksi:['Refleksi Mengajar','Catatan refleksi guru atas kegiatan belajar'],
+  anekdot:['Anekdot Murid','Catatan kejadian khusus / observasi siswa'],
   rekap:['Rekap & Cetak','Rekapitulasi kehadiran, nilai, dan jurnal'],
   pengaturan:['Pengaturan','Identitas guru, kelas, dan data aplikasi'],
 };
@@ -329,6 +336,7 @@ function render(){
   ({
     beranda:renderBeranda, kelas:renderKelas, perangkat:renderPerangkat,
     absensi:renderAbsensi, nilai:renderNilai, jurnal:renderJurnal,
+    refleksi:renderRefleksi, anekdot:renderAnekdot,
     rekap:renderRekap, pengaturan:renderPengaturan
   }[currentTab])(c);
 }
@@ -358,6 +366,7 @@ function closeModal(){ document.getElementById('modalBg').classList.remove('open
 document.getElementById('modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
 
 /* ============================ BERANDA ============================ */
+const HARI_ORDER=['Senin','Selasa','Rabu','Kamis',"Jumat",'Sabtu','Minggu'];
 function renderBeranda(c){
   const totalKelas = state.kelas.length;
   const totalSiswa = Object.values(state.siswa).reduce((a,l)=>a+l.length,0);
@@ -373,8 +382,51 @@ function renderBeranda(c){
     });
   });
   const pctHadir = totalCatatBulanIni? Math.round(hadirBulanIni/totalCatatBulanIni*100):0;
+  const s=state.settings;
+  const initials=(s.namaGuru||'G U').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'GU';
+
+  const jadwal=[...state.jadwalMengajar].sort((a,b)=>{
+    const d=HARI_ORDER.indexOf(a.hari)-HARI_ORDER.indexOf(b.hari);
+    return d!==0?d:(a.jamKe||'').localeCompare(b.jamKe||'');
+  });
 
   c.innerHTML = `
+  <div class="card">
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+      <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#231e0f;font-weight:800;font-size:22px;flex:0 0 auto">${initials}</div>
+      <div style="flex:1;min-width:220px">
+        <h3 style="margin:0 0 3px;font-size:19px">${s.namaGuru||'Nama Guru belum diisi'}</h3>
+        <div class="small-muted">${s.jabatan||'Guru'} · ${s.programKeahlian}</div>
+      </div>
+      <button class="btn-ghost btn-sm no-print" onclick="currentTab='pengaturan';render()">Edit Profil</button>
+    </div>
+    <div class="grid cols-4" style="margin-top:16px">
+      <div><label style="margin-bottom:2px">NIP</label><div>${s.nip||'-'}</div></div>
+      <div><label style="margin-bottom:2px">Jabatan</label><div>${s.jabatan||'-'}</div></div>
+      <div><label style="margin-bottom:2px">Sekolah</label><div>${s.sekolah||'-'}</div></div>
+      <div><label style="margin-bottom:2px">Tahun Pelajaran</label><div>${s.tahunAjaran} · Semester ${s.semester}</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <h3 style="margin:0">Jadwal Mengajar — TP ${s.tahunAjaran} (${s.semester})</h3>
+      <button class="btn-primary btn-sm no-print" onclick="modalTambahJadwal()">+ Tambah Jadwal</button>
+    </div>
+    ${jadwal.length===0?`<div class="empty">Belum ada jadwal mengajar. Tambahkan hari, jam, dan kelas.</div>`:
+    `<div class="table-wrap"><table>
+      <tr><th style="width:110px">Hari</th><th style="width:100px">Jam Ke</th><th>Kelas</th><th>Mata Pelajaran</th><th style="width:90px" class="no-print"></th></tr>
+      ${jadwal.map(j=>{
+        const k=state.kelas.find(x=>x.id===j.kelasId);
+        return `<tr><td>${j.hari}</td><td>${j.jamKe||'-'}</td><td>${k?k.nama:'-'}</td><td>${k?FASE[k.tingkat].mapel:'-'}</td>
+        <td class="no-print"><div class="btn-row">
+          <button class="btn-ghost btn-sm" onclick="modalEditJadwal('${j.id}')">Edit</button>
+          <button class="btn-danger btn-sm" onclick="hapusJadwal('${j.id}')">✕</button>
+        </div></td></tr>`;
+      }).join('')}
+    </table></div>`}
+  </div>
+
   <div class="grid cols-4">
     ${kpi('#ff6a3d','🏫',totalKelas,'Rombel diampu')}
     ${kpi('#2b63b8','🧑‍🎓',totalSiswa,'Total siswa')}
@@ -415,6 +467,32 @@ function kpi(color,ic,num,lbl){
   return `<div class="card kpi"><div class="kpi-icon" style="background:${color}">${ic}</div><div><div class="num">${num}</div><div class="lbl">${lbl}</div></div></div>`;
 }
 function fmtDateShort(d){ if(!d) return '-'; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }
+
+function jadwalForm(j){
+  const kelasId=j?j.kelasId:(state.kelas[0]?state.kelas[0].id:'');
+  return `
+    <h3>${j?'Edit':'Tambah'} Jadwal Mengajar</h3>
+    <div class="field"><label>Hari</label><select id="fHariW">${HARI_ORDER.map(h=>`<option ${j&&j.hari===h?'selected':''}>${h}</option>`).join('')}</select></div>
+    <div class="field"><label>Jam Ke</label><input type="text" id="fJamW" value="${j?j.jamKe:''}" placeholder="mis. 1-2 atau 07.00-08.30"></div>
+    <div class="field"><label>Kelas</label><select id="fKelasW">${kelasOptions(kelasId)}</select></div>
+    <button class="btn-primary" onclick="simpanJadwal(${j?`'${j.id}'`:'null'})">Simpan</button>`;
+}
+function modalTambahJadwal(){
+  if(!state.kelas.length){ toast('Tambahkan kelas terlebih dahulu di menu Data Kelas'); return; }
+  openModal(jadwalForm(null));
+}
+function modalEditJadwal(id){ openModal(jadwalForm(state.jadwalMengajar.find(x=>x.id===id))); }
+function simpanJadwal(id){
+  const data={ hari:document.getElementById('fHariW').value, jamKe:document.getElementById('fJamW').value.trim(), kelasId:document.getElementById('fKelasW').value };
+  if(id){ Object.assign(state.jadwalMengajar.find(x=>x.id===id),data); }
+  else { state.jadwalMengajar.push({id:uid(),...data}); }
+  saveState(true); closeModal(); render();
+}
+function hapusJadwal(id){
+  if(!confirm('Hapus jadwal ini?')) return;
+  state.jadwalMengajar=state.jadwalMengajar.filter(j=>j.id!==id);
+  saveState(true); render();
+}
 
 /* ============================ DATA KELAS ============================ */
 function renderKelas(c){
@@ -876,6 +954,183 @@ function hapusJurnal(id){
   saveState(true); render();
 }
 
+/* ============================ REFLEKSI MENGAJAR ============================ */
+function renderRefleksi(c){
+  c.innerHTML=`
+  <div class="toolbar">
+    <div class="small-muted">${state.refleksi.length} catatan refleksi</div>
+    <button class="btn-primary" onclick="modalTambahRefleksi()">+ Tambah Refleksi</button>
+  </div>
+  <div id="refleksiList"></div>`;
+  const wrap=document.getElementById('refleksiList');
+  const items=[...state.refleksi].sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  if(items.length===0){ wrap.innerHTML=`<div class="empty">Belum ada refleksi. Catat apa yang berjalan baik, kendala, dan rencana tindak lanjut setelah mengajar.</div>`; return; }
+  wrap.innerHTML=items.map(r=>{
+    const k=state.kelas.find(x=>x.id===r.kelasId);
+    return `<div class="card">
+      <div class="toolbar" style="margin-bottom:6px">
+        <h3 style="margin:0">${fmtDate(r.tanggal)} ${k?'· '+k.nama:''}</h3>
+        <div class="btn-row">
+          <button class="btn-ghost btn-sm" onclick="modalEditRefleksi('${r.id}')">Edit</button>
+          <button class="btn-danger btn-sm" onclick="hapusRefleksi('${r.id}')">✕</button>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <div><label>Hal yang Berjalan Baik</label><div>${r.hasilBaik||'-'}</div></div>
+        <div><label>Kendala / Tantangan</label><div>${r.kendala||'-'}</div></div>
+      </div>
+      <div class="field" style="margin-top:10px"><label>Rencana Tindak Lanjut</label><div>${r.tindakLanjut||'-'}</div></div>
+      ${r.catatan?`<div class="field"><label>Catatan Lain</label><div>${r.catatan}</div></div>`:''}
+    </div>`;
+  }).join('');
+}
+function refleksiForm(r){
+  const kelasId=r?r.kelasId:(state.kelas[0]?state.kelas[0].id:'');
+  return `
+    <h3>${r?'Edit':'Tambah'} Refleksi Mengajar</h3>
+    <div class="grid cols-2">
+      <div class="field"><label>Tanggal</label><input type="date" id="fTglR" value="${r?r.tanggal:todayStr()}"></div>
+      <div class="field"><label>Kelas</label><select id="fKelasR">${kelasOptions(kelasId)}</select></div>
+    </div>
+    <div class="field"><label>Hal yang Berjalan Baik</label><textarea id="fBaikR" placeholder="Apa yang berhasil dalam pembelajaran hari ini?">${r?r.hasilBaik:''}</textarea></div>
+    <div class="field"><label>Kendala / Tantangan</label><textarea id="fKendalaR" placeholder="Kesulitan yang dihadapi guru atau siswa">${r?r.kendala:''}</textarea></div>
+    <div class="field"><label>Rencana Tindak Lanjut</label><textarea id="fTLR" placeholder="Perbaikan atau strategi untuk pertemuan berikutnya">${r?r.tindakLanjut:''}</textarea></div>
+    <div class="field"><label>Catatan Lain</label><textarea id="fCatatanR">${r?r.catatan:''}</textarea></div>
+    <button class="btn-primary" onclick="simpanRefleksi(${r?`'${r.id}'`:'null'})">Simpan</button>`;
+}
+function modalTambahRefleksi(){
+  if(!state.kelas.length){ toast('Tambahkan kelas terlebih dahulu di menu Data Kelas'); return; }
+  openModal(refleksiForm(null));
+}
+function modalEditRefleksi(id){ openModal(refleksiForm(state.refleksi.find(x=>x.id===id))); }
+function simpanRefleksi(id){
+  const data={
+    tanggal:document.getElementById('fTglR').value||todayStr(),
+    kelasId:document.getElementById('fKelasR').value,
+    hasilBaik:document.getElementById('fBaikR').value,
+    kendala:document.getElementById('fKendalaR').value,
+    tindakLanjut:document.getElementById('fTLR').value,
+    catatan:document.getElementById('fCatatanR').value
+  };
+  if(id){ Object.assign(state.refleksi.find(x=>x.id===id),data); }
+  else { state.refleksi.push({id:uid(),...data}); }
+  saveState(true); closeModal(); render();
+}
+function hapusRefleksi(id){
+  if(!confirm('Hapus catatan refleksi ini?')) return;
+  state.refleksi=state.refleksi.filter(r=>r.id!==id);
+  saveState(true); render();
+}
+
+/* ============================ ANEKDOT MURID ============================ */
+const ANEKDOT_KATEGORI=[
+  {k:'Prestasi',color:'#178674'},
+  {k:'Positif',color:'#2b63b8'},
+  {k:'Perlu Perhatian',color:'#b5790a'},
+  {k:'Pelanggaran',color:'#d64545'},
+  {k:'Lainnya',color:'#7b7688'}
+];
+let anekdotFilterKelas='ALL';
+function renderAnekdot(c){
+  c.innerHTML=`
+  <div class="toolbar">
+    <div class="tag-row" id="anekdotTags"></div>
+    <button class="btn-primary" onclick="modalTambahAnekdot()">+ Catat Kejadian</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table>
+      <tr><th style="width:100px">Tanggal</th><th>Kelas</th><th>Nama Siswa</th><th style="width:120px">Kategori</th><th>Kejadian</th><th>Tindak Lanjut</th><th style="width:90px"></th></tr>
+      <tbody id="anekdotRows"></tbody>
+    </table></div>
+  </div>`;
+  const tagWrap=document.getElementById('anekdotTags');
+  const tags=[{k:'ALL',l:'Semua Kelas'},...state.kelas.map(k=>({k:k.id,l:k.nama}))];
+  tagWrap.innerHTML=tags.map(t=>`<span class="tag ${anekdotFilterKelas===t.k?'active':''}" onclick="anekdotFilterKelas='${t.k}';render()">${t.l}</span>`).join('');
+
+  const rows=document.getElementById('anekdotRows');
+  const items=[...state.anekdot].filter(a=>anekdotFilterKelas==='ALL'||a.kelasId===anekdotFilterKelas).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  if(items.length===0){ rows.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted)">Belum ada catatan kejadian khusus</td></tr>`; return; }
+  rows.innerHTML=items.map(a=>{
+    const k=state.kelas.find(x=>x.id===a.kelasId);
+    const kat=ANEKDOT_KATEGORI.find(x=>x.k===a.kategori)||ANEKDOT_KATEGORI[4];
+    return `<tr>
+      <td>${fmtDateShort(a.tanggal)}</td><td>${k?k.nama:'-'}</td><td>${a.namaSiswa}</td>
+      <td><span class="badge" style="background:${kat.color}18;color:${kat.color}">${a.kategori}</span></td>
+      <td style="max-width:220px">${a.kejadian}</td>
+      <td style="max-width:180px">${a.tindakLanjut||'-'}</td>
+      <td><div class="btn-row">
+        <button class="btn-ghost btn-sm" onclick="modalEditAnekdot('${a.id}')">Edit</button>
+        <button class="btn-danger btn-sm" onclick="hapusAnekdot('${a.id}')">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function anekdotSiswaOptions(kelasId,selectedId,selectedNama){
+  const siswa=getSiswa(kelasId);
+  let opts=siswa.map(s=>`<option value="${s.id}" ${s.id===selectedId?'selected':''}>${s.nama}</option>`).join('');
+  opts+=`<option value="__lain__" ${!selectedId?'selected':''}>Nama lain (ketik manual)</option>`;
+  return opts;
+}
+function refreshAnekdotSiswaSelect(){
+  const kelasId=document.getElementById('fKelasA').value;
+  document.getElementById('fSiswaA').innerHTML=anekdotSiswaOptions(kelasId,null,null);
+  toggleAnekdotNamaManual();
+}
+function toggleAnekdotNamaManual(){
+  const v=document.getElementById('fSiswaA').value;
+  document.getElementById('fNamaManualWrap').style.display = v==='__lain__' ? 'block':'none';
+}
+function anekdotForm(a){
+  const kelasId=a?a.kelasId:(state.kelas[0]?state.kelas[0].id:'');
+  return `
+    <h3>${a?'Edit':'Catat'} Kejadian Siswa</h3>
+    <div class="grid cols-2">
+      <div class="field"><label>Tanggal</label><input type="date" id="fTglA" value="${a?a.tanggal:todayStr()}"></div>
+      <div class="field"><label>Kelas</label><select id="fKelasA" onchange="refreshAnekdotSiswaSelect()">${kelasOptions(kelasId)}</select></div>
+    </div>
+    <div class="field"><label>Nama Siswa</label><select id="fSiswaA" onchange="toggleAnekdotNamaManual()">${anekdotSiswaOptions(kelasId,a?a.siswaId:null,a?a.namaSiswa:null)}</select></div>
+    <div class="field" id="fNamaManualWrap" style="display:${a&&!a.siswaId?'block':'none'}">
+      <label>Nama (manual)</label><input type="text" id="fNamaManualA" value="${a&&!a.siswaId?a.namaSiswa:''}">
+    </div>
+    <div class="field"><label>Kategori</label><select id="fKategoriA">${ANEKDOT_KATEGORI.map(k=>`<option ${a&&a.kategori===k.k?'selected':''}>${k.k}</option>`).join('')}</select></div>
+    <div class="field"><label>Deskripsi Kejadian</label><textarea id="fKejadianA" placeholder="Ceritakan kejadian secara singkat dan objektif">${a?a.kejadian:''}</textarea></div>
+    <div class="field"><label>Tindak Lanjut</label><textarea id="fTLA" placeholder="Langkah yang sudah/akan dilakukan">${a?a.tindakLanjut:''}</textarea></div>
+    <button class="btn-primary" onclick="simpanAnekdot(${a?`'${a.id}'`:'null'})">Simpan</button>`;
+}
+function modalTambahAnekdot(){
+  if(!state.kelas.length){ toast('Tambahkan kelas terlebih dahulu di menu Data Kelas'); return; }
+  openModal(anekdotForm(null));
+}
+function modalEditAnekdot(id){ openModal(anekdotForm(state.anekdot.find(x=>x.id===id))); }
+function simpanAnekdot(id){
+  const kelasId=document.getElementById('fKelasA').value;
+  const siswaSel=document.getElementById('fSiswaA').value;
+  let siswaId=null, namaSiswa='';
+  if(siswaSel==='__lain__'){
+    namaSiswa=document.getElementById('fNamaManualA').value.trim();
+  } else {
+    siswaId=siswaSel;
+    const s=getSiswa(kelasId).find(x=>x.id===siswaId);
+    namaSiswa=s?s.nama:'';
+  }
+  if(!namaSiswa){ toast('Nama siswa wajib diisi'); return; }
+  const data={
+    tanggal:document.getElementById('fTglA').value||todayStr(),
+    kelasId, siswaId, namaSiswa,
+    kategori:document.getElementById('fKategoriA').value,
+    kejadian:document.getElementById('fKejadianA').value,
+    tindakLanjut:document.getElementById('fTLA').value
+  };
+  if(id){ Object.assign(state.anekdot.find(x=>x.id===id),data); }
+  else { state.anekdot.push({id:uid(),...data}); }
+  saveState(true); closeModal(); render();
+}
+function hapusAnekdot(id){
+  if(!confirm('Hapus catatan kejadian ini?')) return;
+  state.anekdot=state.anekdot.filter(a=>a.id!==id);
+  saveState(true); render();
+}
+
 /* ============================ REKAP & CETAK ============================ */
 let rekapKelas=null, rekapBulan=todayStr().slice(0,7);
 function renderRekap(c){
@@ -960,6 +1215,7 @@ function renderPengaturan(c){
     <div class="grid cols-2">
       <div class="field"><label>Nama Guru</label><input type="text" id="pNama" value="${s.namaGuru}"></div>
       <div class="field"><label>NIP</label><input type="text" id="pNip" value="${s.nip}"></div>
+      <div class="field"><label>Jabatan</label><input type="text" id="pJabatan" value="${s.jabatan||''}" placeholder="mis. Guru Produktif DKV"></div>
       <div class="field"><label>Nama Sekolah</label><input type="text" id="pSekolah" value="${s.sekolah}"></div>
       <div class="field"><label>Program Keahlian</label><input type="text" id="pProgram" value="${s.programKeahlian}"></div>
       <div class="field"><label>Tahun Pelajaran</label><input type="text" id="pTA" value="${s.tahunAjaran}" placeholder="2026/2027"></div>
@@ -991,6 +1247,7 @@ function renderPengaturan(c){
 function simpanPengaturan(){
   state.settings.namaGuru=document.getElementById('pNama').value;
   state.settings.nip=document.getElementById('pNip').value;
+  state.settings.jabatan=document.getElementById('pJabatan').value;
   state.settings.sekolah=document.getElementById('pSekolah').value;
   state.settings.programKeahlian=document.getElementById('pProgram').value;
   state.settings.tahunAjaran=document.getElementById('pTA').value;
