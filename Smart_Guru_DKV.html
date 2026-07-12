@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Guru DKV — Administrasi Guru</title>
+<style>
+:root{
+  --ink:#1c1a24;
+  --paper:#f7f5f1;
+  --panel:#ffffff;
+  --navy:#232042;
+  --navy-2:#2e2a54;
+  --accent:#ff6a3d;
+  --accent-2:#ffb703;
+  --teal:#1f9d8a;
+  --line:#e4e0d8;
+  --muted:#7b7688;
+  --danger:#d64545;
+  --radius:14px;
+  --shadow:0 8px 24px rgba(35,32,66,.08);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  display:flex;
+  min-height:100vh;
+}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:#d8d3c8;border-radius:8px;}
+
+/* ---------- Sidebar ---------- */
+#sidebar{
+  width:242px;
+  flex:0 0 242px;
+  background:linear-gradient(180deg,var(--navy),var(--navy-2));
+  color:#f1efff;
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+.brand{
+  padding:22px 20px 14px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.brand .mark{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:16px;color:#231e0f;margin-bottom:10px;
+}
+.brand h1{font-size:16.5px;margin:0 0 3px;letter-spacing:.2px;}
+.brand p{margin:0;font-size:11.5px;color:#b9b4d8;}
+nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 12px;margin-bottom:3px;border-radius:10px;
+  cursor:pointer;font-size:13.5px;color:#d8d5f0;
+  transition:.15s;border:1px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,.06);}
+.nav-item.active{
+  background:rgba(255,106,61,.16);
+  color:#fff;border-color:rgba(255,106,61,.4);
+  font-weight:600;
+}
+.nav-item .ic{width:18px;text-align:center;font-size:15px;}
+.sidebar-foot{
+  padding:14px 18px;border-top:1px solid rgba(255,255,255,.1);
+  font-size:11px;color:#9d98c2;
+}
+
+/* ---------- Main ---------- */
+#main{flex:1;min-width:0;display:flex;flex-direction:column;}
+#topbar{
+  background:var(--panel);border-bottom:1px solid var(--line);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:5;
+}
+#topbar h2{margin:0;font-size:19px;}
+#topbar .sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
+.chip{
+  background:#fff2ec;color:var(--accent);border:1px solid #ffd9c6;
+  padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;
+}
+#content{padding:26px 28px 60px;flex:1;}
+
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+.card h3{margin:0 0 4px;font-size:16px;}
+.card .desc{color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+.grid{display:grid;gap:16px;}
+.grid.cols-2{grid-template-columns:1fr 1fr;}
+.grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.grid.cols-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}}
+
+label{display:block;font-size:12px;font-weight:600;color:#4a465c;margin-bottom:5px;}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+  font-size:13.5px;font-family:inherit;background:#fdfcfa;color:var(--ink);
+}
+textarea{resize:vertical;min-height:70px;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.field{margin-bottom:12px;}
+
+button{font-family:inherit;cursor:pointer;border-radius:9px;font-size:13px;font-weight:600;border:1px solid transparent;padding:9px 16px;transition:.15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#ef5a2b;}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink);}
+.btn-ghost:hover{background:#f2efe9;}
+.btn-teal{background:var(--teal);color:#fff;}
+.btn-teal:hover{background:#178674;}
+.btn-danger{background:#fff;border-color:#f2c6c6;color:var(--danger);}
+.btn-danger:hover{background:#fdecec;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+
+table{width:100%;border-collapse:collapse;font-size:12.8px;}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;}
+th{background:#f2efe6;font-weight:700;font-size:11.6px;text-transform:uppercase;letter-spacing:.3px;color:#4a465c;}
+tr:nth-child(even) td{background:#fbfaf7;}
+.table-wrap{overflow-x:auto;}
+
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.h{background:#e3f5ee;color:#1a8a6f;}
+.badge.s{background:#fff1da;color:#b5790a;}
+.badge.i{background:#e6eefb;color:#2b63b8;}
+.badge.a{background:#fbe4e4;color:var(--danger);}
+
+.empty{
+  text-align:center;padding:38px 20px;color:var(--muted);
+  border:1.5px dashed var(--line);border-radius:12px;font-size:13.5px;
+}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.tag{
+  padding:6px 13px;border-radius:20px;font-size:12.5px;font-weight:600;
+  background:#fff;border:1px solid var(--line);cursor:pointer;color:var(--ink);
+}
+.tag.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+.att-btns{display:flex;gap:4px;}
+.att-btn{
+  width:30px;height:26px;border-radius:7px;border:1px solid var(--line);
+  background:#fff;font-size:11.5px;font-weight:800;cursor:pointer;color:#888;
+}
+.att-btn.on-h{background:#1a8a6f;color:#fff;border-color:#1a8a6f;}
+.att-btn.on-s{background:#b5790a;color:#fff;border-color:#b5790a;}
+.att-btn.on-i{background:#2b63b8;color:#fff;border-color:#2b63b8;}
+.att-btn.on-a{background:var(--danger);color:#fff;border-color:var(--danger);}
+
+.kpi{display:flex;align-items:center;gap:14px;}
+.kpi .num{font-size:28px;font-weight:800;color:var(--navy);}
+.kpi .lbl{font-size:12px;color:var(--muted);}
+.kpi-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;}
+
+.stat-list{list-style:none;margin:0;padding:0;}
+.stat-list li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;}
+.stat-list li:last-child{border-bottom:none;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(20,18,35,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:18px;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.modal h3{margin-top:0;}
+.close-x{position:absolute;top:14px;right:16px;cursor:pointer;font-size:18px;color:var(--muted);background:none;border:none;padding:2px 6px;}
+.modal-pos{position:relative;}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.search{max-width:260px;}
+
+.printable{display:none;}
+@media print{
+  #sidebar,#topbar,.no-print{display:none !important;}
+  #content{padding:0 !important;}
+  .printable{display:block !important;}
+  .card{box-shadow:none;border:1px solid #999;}
+  body{background:#fff;}
+}
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;
+  padding:11px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);
+  opacity:0;transform:translateY(10px);transition:.25s;z-index:80;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.small-muted{font-size:11.8px;color:var(--muted);}
+.avg-cell{font-weight:700;color:var(--teal);}
+.pill-fase{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#eee7ff;color:#5b3ed6;}
+.loading-screen{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:200;}
+.spinner{width:34px;height:34px;border:3px solid #e6e2d8;border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading-screen"><div class="spinner"></div><div style="font-size:13px;color:var(--muted)">Memuat data...</div></div>
+
+<div id="sidebar" style="display:none">
+  <div class="brand">
+    <div class="mark">DKV</div>
+    <h1>Smart Guru DKV</h1>
+    <p id="brandSub">Administrasi Guru Produktif</p>
+  </div>
+  <nav id="navList"></nav>
+  <div class="sidebar-foot">Data tersimpan otomatis di perangkat ini.</div>
+</div>
+
+<div id="main" style="display:none">
+  <div id="topbar">
+    <div>
+      <h2 id="pageTitle">Beranda</h2>
+      <div class="sub" id="pageSub">Ringkasan administrasi mengajar</div>
+    </div>
+    <div class="chip" id="taChip">TP -</div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal modal-pos" id="modalBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================ STATE ============================ */
+const STORAGE_KEY = 'dkv_smart_guru_state_v1';
+const FASE = {
+  X:  {fase:'E', mapel:'Dasar-dasar Keahlian DKV'},
+  XI: {fase:'F', mapel:'Kreatifitas, Inovatif dan Kewirausahaan'},
+  XII:{fase:'F', mapel:'Kreatifitas, Inovatif dan Kewirausahaan'}
+};
+const PERANGKAT_KATEGORI = ['Capaian Pembelajaran (CP)','Alur Tujuan Pembelajaran (ATP)','Modul Ajar','Bahan Ajar','Asesmen / Rubrik','Kisi-kisi Soal'];
+
+let state = null;
+let currentTab = 'beranda';
+let saveTimer = null;
+
+function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function defaultState(){
+  return {
+    settings:{
+      namaGuru:'', nip:'', sekolah:'', tahunAjaran:'2026/2027', semester:'Ganjil',
+      programKeahlian:'Desain Komunikasi Visual (DKV)'
+    },
+    kelas:[],      // {id, nama, tingkat(X/XI/XII), wali, fase, mapel}
+    siswa:{},      // kelasId -> [{id,no,nis,nisn,nama,lp}]
+    perangkat:[],  // {id, tingkat, kategori, judul, isi, tanggal}
+    absensi:{},    // kelasId -> { 'yyyy-mm-dd': {siswaId: 'H'|'S'|'I'|'A'} }
+    nilai:{},      // kelasId -> { komponenId: {siswaId: nilai} }
+    komponenNilai:{}, // kelasId -> [{id,nama,tanggal}]
+    jurnal:[]      // {id,no,hari,tanggal,jamKe,kelasId,tujuan,pelaksanaan,sumber,tidakHadir:{a,i,s},jmlHadir,catatan}
+  };
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){ state = JSON.parse(res.value); }
+    else { state = defaultState(); }
+  }catch(e){ state = defaultState(); }
+  // migrate/ensure keys
+  const d = defaultState();
+  for(const k in d){ if(!(k in state)) state[k]=d[k]; }
+}
+function saveState(showToast){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async()=>{
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      if(showToast) toast('Tersimpan');
+    }catch(e){ toast('Gagal menyimpan data'); }
+  }, 250);
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ============================ NAV ============================ */
+const NAV = [
+  {id:'beranda', ic:'🏠', label:'Beranda'},
+  {id:'kelas', ic:'🏫', label:'Data Kelas'},
+  {id:'perangkat', ic:'📘', label:'Perangkat Pembelajaran'},
+  {id:'absensi', ic:'✅', label:'Absensi Siswa'},
+  {id:'nilai', ic:'📝', label:'Daftar Nilai'},
+  {id:'jurnal', ic:'📔', label:'Jurnal Mengajar'},
+  {id:'rekap', ic:'🖨️', label:'Rekap & Cetak'},
+  {id:'pengaturan', ic:'⚙️', label:'Pengaturan'},
+];
+function renderNav(){
+  const nav=document.getElementById('navList');
+  nav.innerHTML='';
+  NAV.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='nav-item'+(currentTab===item.id?' active':'');
+    el.innerHTML=`<span class="ic">${item.ic}</span><span>${item.label}</span>`;
+    el.onclick=()=>{ currentTab=item.id; render(); };
+    nav.appendChild(el);
+  });
+  document.getElementById('brandSub').textContent = state.settings.programKeahlian || 'Administrasi Guru Produktif';
+  document.getElementById('taChip').textContent = `TP ${state.settings.tahunAjaran||'-'} · ${state.settings.semester||'-'}`;
+}
+
+const TITLES = {
+  beranda:['Beranda','Ringkasan administrasi mengajar hari ini'],
+  kelas:['Data Kelas','Kelola rombongan belajar dan daftar siswa'],
+  perangkat:['Perangkat Pembelajaran','CP, ATP, modul ajar, dan bahan ajar per fase'],
+  absensi:['Absensi Siswa','Catat kehadiran siswa per kelas dan tanggal'],
+  nilai:['Daftar Nilai','Kelola komponen dan nilai siswa per kelas'],
+  jurnal:['Jurnal Mengajar','Buku agenda mengajar harian'],
+  rekap:['Rekap & Cetak','Rekapitulasi kehadiran, nilai, dan jurnal'],
+  pengaturan:['Pengaturan','Identitas guru, kelas, dan data aplikasi'],
+};
+
+function render(){
+  renderNav();
+  const [t,s] = TITLES[currentTab];
+  document.getElementById('pageTitle').textContent=t;
+  document.getElementById('pageSub').textContent=s;
+  const c=document.getElementById('content');
+  c.innerHTML='';
+  ({
+    beranda:renderBeranda, kelas:renderKelas, perangkat:renderPerangkat,
+    absensi:renderAbsensi, nilai:renderNilai, jurnal:renderJurnal,
+    rekap:renderRekap, pengaturan:renderPengaturan
+  }[currentTab])(c);
+}
+
+/* ============================ HELPERS ============================ */
+function kelasOptions(selectedId){
+  return state.kelas.map(k=>`<option value="${k.id}" ${k.id===selectedId?'selected':''}>${k.nama}</option>`).join('');
+}
+function getSiswa(kelasId){ return state.siswa[kelasId]||[]; }
+function tingkatBadge(t){
+  const map={X:'#2b63b8',XI:'#b5790a',XII:'#178674'};
+  return `<span class="pill-fase" style="background:${map[t]}18;color:${map[t]}">Kelas ${t} · Fase ${FASE[t].fase}</span>`;
+}
+function fmtDate(d){
+  if(!d) return '-';
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* ============================ MODAL ============================ */
+function openModal(html){
+  document.getElementById('modalBody').innerHTML = `<button class="close-x" onclick="closeModal()">✕</button>`+html;
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('open'); }
+document.getElementById('modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+/* ============================ BERANDA ============================ */
+function renderBeranda(c){
+  const totalKelas = state.kelas.length;
+  const totalSiswa = Object.values(state.siswa).reduce((a,l)=>a+l.length,0);
+  const totalJurnal = state.jurnal.length;
+  const totalPerangkat = state.perangkat.length;
+  const bulanIni = todayStr().slice(0,7);
+  let hadirBulanIni=0, totalCatatBulanIni=0;
+  Object.values(state.absensi).forEach(byDate=>{
+    Object.entries(byDate).forEach(([tgl,rec])=>{
+      if(tgl.slice(0,7)===bulanIni){
+        Object.values(rec).forEach(st=>{ totalCatatBulanIni++; if(st==='H') hadirBulanIni++; });
+      }
+    });
+  });
+  const pctHadir = totalCatatBulanIni? Math.round(hadirBulanIni/totalCatatBulanIni*100):0;
+
+  c.innerHTML = `
+  <div class="grid cols-4">
+    ${kpi('#ff6a3d','🏫',totalKelas,'Rombel diampu')}
+    ${kpi('#2b63b8','🧑‍🎓',totalSiswa,'Total siswa')}
+    ${kpi('#178674','📔',totalJurnal,'Entri jurnal mengajar')}
+    ${kpi('#b5790a','✅',pctHadir+'%','Kehadiran bulan ini')}
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>Kelas yang diampu</h3>
+      <div class="desc">Ringkasan rombel per tingkat</div>
+      ${totalKelas===0?`<div class="empty">Belum ada data kelas. Tambahkan di menu <b>Data Kelas</b>.</div>`:
+      `<ul class="stat-list">${state.kelas.map(k=>`<li><span>${tingkatBadge(k.tingkat)} &nbsp;${k.nama}</span><span>${getSiswa(k.id).length} siswa</span></li>`).join('')}</ul>`}
+    </div>
+    <div class="card">
+      <h3>Aktivitas jurnal terbaru</h3>
+      <div class="desc">5 entri agenda mengajar terakhir</div>
+      ${state.jurnal.length===0?`<div class="empty">Belum ada jurnal mengajar. Isi di menu <b>Jurnal Mengajar</b>.</div>`:
+      `<ul class="stat-list">${[...state.jurnal].sort((a,b)=>b.tanggal.localeCompare(a.tanggal)).slice(0,5).map(j=>{
+        const k=state.kelas.find(x=>x.id===j.kelasId);
+        return `<li><span>${fmtDateShort(j.tanggal)} · ${k?k.nama:'-'}</span><span class="small-muted">${(j.tujuan||'').slice(0,28)}${(j.tujuan||'').length>28?'…':''}</span></li>`;
+      }).join('')}</ul>`}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Perangkat pembelajaran</h3>
+    <div class="desc">Total dokumen tersimpan: ${totalPerangkat}</div>
+    <div class="tag-row">
+      ${Object.keys(FASE).map(t=>{
+        const n=state.perangkat.filter(p=>p.tingkat===t).length;
+        return `<span class="tag">Kelas ${t} (Fase ${FASE[t].fase}) — ${n} dokumen</span>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+function kpi(color,ic,num,lbl){
+  return `<div class="card kpi"><div class="kpi-icon" style="background:${color}">${ic}</div><div><div class="num">${num}</div><div class="lbl">${lbl}</div></div></div>`;
+}
+function fmtDateShort(d){ if(!d) return '-'; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }
+
+/* ============================ DATA KELAS ============================ */
+function renderKelas(c){
+  c.innerHTML = `
+  <div class="toolbar">
+    <div class="small-muted">${state.kelas.length} rombel tersimpan</div>
+    <button class="btn-primary" onclick="modalTambahKelas()">+ Tambah Kelas</button>
+  </div>
+  <div id="kelasList" class="grid cols-2"></div>`;
+  const wrap=document.getElementById('kelasList');
+  if(state.kelas.length===0){
+    wrap.innerHTML=`<div class="empty" style="grid-column:1/-1">Belum ada kelas. Klik "Tambah Kelas" untuk memulai — misalnya X DKV 1, XI DKV 2, XII DKV 1.</div>`;
+    return;
+  }
+  state.kelas.forEach(k=>{
+    const siswa=getSiswa(k.id);
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h3>${k.nama}</h3>
+          ${tingkatBadge(k.tingkat)}
+          <div class="desc" style="margin-top:8px">Wali kelas: ${k.wali||'-'}<br>Mapel: ${FASE[k.tingkat].mapel}</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost btn-sm" onclick="modalEditKelas('${k.id}')">Edit</button>
+          <button class="btn-danger btn-sm" onclick="hapusKelas('${k.id}')">Hapus</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px;max-height:220px;overflow-y:auto">
+        <table>
+          <tr><th>No</th><th>NIS</th><th>NISN</th><th>Nama</th><th>L/P</th><th></th></tr>
+          ${siswa.length===0?`<tr><td colspan="6" style="text-align:center;color:var(--muted)">Belum ada siswa</td></tr>`:
+          siswa.map((s,idx)=>`<tr>
+            <td>${idx+1}</td><td>${s.nis||'-'}</td><td>${s.nisn||'-'}</td><td>${s.nama}</td><td>${s.lp}</td>
+            <td><button class="btn-ghost btn-sm" onclick="hapusSiswa('${k.id}','${s.id}')">✕</button></td>
+          </tr>`).join('')}
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn-teal btn-sm" onclick="modalTambahSiswa('${k.id}')">+ Tambah Siswa</button>
+        <button class="btn-ghost btn-sm" onclick="modalImportSiswa('${k.id}')">Impor Daftar (tempel teks)</button>
+      </div>`;
+    wrap.appendChild(card);
+  });
+}
+function modalTambahKelas(){
+  openModal(`
+    <h3>Tambah Kelas</h3>
+    <div class="field"><label>Nama Kelas (contoh: X DKV 1)</label><input type="text" id="fNamaKelas"></div>
+    <div class="field"><label>Tingkat</label><select id="fTingkat"><option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option></select></div>
+    <div class="field"><label>Wali Kelas</label><input type="text" id="fWali"></div>
+    <button class="btn-primary" onclick="simpanKelas()">Simpan</button>`);
+}
+function modalEditKelas(id){
+  const k=state.kelas.find(x=>x.id===id);
+  openModal(`
+    <h3>Edit Kelas</h3>
+    <div class="field"><label>Nama Kelas</label><input type="text" id="fNamaKelas" value="${k.nama}"></div>
+    <div class="field"><label>Tingkat</label><select id="fTingkat">
+      ${['X','XI','XII'].map(t=>`<option value="${t}" ${t===k.tingkat?'selected':''}>${t}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Wali Kelas</label><input type="text" id="fWali" value="${k.wali||''}"></div>
+    <button class="btn-primary" onclick="simpanKelas('${id}')">Simpan Perubahan</button>`);
+}
+function simpanKelas(id){
+  const nama=document.getElementById('fNamaKelas').value.trim();
+  const tingkat=document.getElementById('fTingkat').value;
+  const wali=document.getElementById('fWali').value.trim();
+  if(!nama){ toast('Nama kelas wajib diisi'); return; }
+  if(id){
+    const k=state.kelas.find(x=>x.id===id);
+    Object.assign(k,{nama,tingkat,wali});
+  } else {
+    const newId=uid();
+    state.kelas.push({id:newId,nama,tingkat,wali,fase:FASE[tingkat].fase,mapel:FASE[tingkat].mapel});
+    state.siswa[newId]=[];
+  }
+  saveState(true); closeModal(); render();
+}
+function hapusKelas(id){
+  if(!confirm('Hapus kelas ini beserta seluruh data siswa, absensi, dan nilainya?')) return;
+  state.kelas=state.kelas.filter(k=>k.id!==id);
+  delete state.siswa[id]; delete state.absensi[id]; delete state.nilai[id]; delete state.komponenNilai[id];
+  saveState(true); render();
+}
+function modalTambahSiswa(kelasId){
+  openModal(`
+    <h3>Tambah Siswa</h3>
+    <div class="field"><label>NIS</label><input type="text" id="fNis"></div>
+    <div class="field"><label>NISN</label><input type="text" id="fNisn"></div>
+    <div class="field"><label>Nama Lengkap</label><input type="text" id="fNama"></div>
+    <div class="field"><label>Jenis Kelamin</label><select id="fLp"><option value="L">L</option><option value="P">P</option></select></div>
+    <button class="btn-primary" onclick="simpanSiswa('${kelasId}')">Simpan</button>`);
+}
+function simpanSiswa(kelasId){
+  const nama=document.getElementById('fNama').value.trim();
+  if(!nama){ toast('Nama wajib diisi'); return; }
+  state.siswa[kelasId]=state.siswa[kelasId]||[];
+  state.siswa[kelasId].push({
+    id:uid(), nis:document.getElementById('fNis').value.trim(),
+    nisn:document.getElementById('fNisn').value.trim(), nama, lp:document.getElementById('fLp').value
+  });
+  saveState(true); closeModal(); render();
+}
+function hapusSiswa(kelasId,siswaId){
+  if(!confirm('Hapus siswa ini?')) return;
+  state.siswa[kelasId]=state.siswa[kelasId].filter(s=>s.id!==siswaId);
+  saveState(true); render();
+}
+function modalImportSiswa(kelasId){
+  openModal(`
+    <h3>Impor Daftar Siswa</h3>
+    <div class="desc">Tempel data, satu siswa per baris, format: <b>NIS;NISN;Nama Lengkap;L/P</b> (pisahkan dengan titik koma). Kolom NIS/NISN boleh dikosongkan.</div>
+    <div class="field"><textarea id="fImport" rows="8" placeholder="11390;69433622;ABDURROHMAN H;L
+11391;58098135;ACHMAD SYIHAB BUDIN;L"></textarea></div>
+    <button class="btn-primary" onclick="prosesImport('${kelasId}')">Impor</button>`);
+}
+function prosesImport(kelasId){
+  const raw=document.getElementById('fImport').value;
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  let count=0;
+  state.siswa[kelasId]=state.siswa[kelasId]||[];
+  lines.forEach(line=>{
+    const parts=line.split(';').map(p=>p.trim());
+    let nis='',nisn='',nama='',lp='L';
+    if(parts.length>=4){ [nis,nisn,nama,lp]=parts; }
+    else if(parts.length===1){ nama=parts[0]; }
+    else { nama=parts[parts.length-1]; }
+    if(!nama) return;
+    lp=(lp||'L').toUpperCase()==='P'?'P':'L';
+    state.siswa[kelasId].push({id:uid(),nis,nisn,nama:nama.toUpperCase(),lp});
+    count++;
+  });
+  saveState(true); closeModal(); render();
+  toast(`${count} siswa ditambahkan`);
+}
+
+/* ============================ PERANGKAT PEMBELAJARAN ============================ */
+let perangkatFilter='ALL';
+function renderPerangkat(c){
+  c.innerHTML=`
+  <div class="toolbar">
+    <div class="tag-row" id="faseTags"></div>
+    <button class="btn-primary" onclick="modalTambahPerangkat()">+ Tambah Dokumen</button>
+  </div>
+  <div id="perangkatList"></div>`;
+  const tagWrap=document.getElementById('faseTags');
+  const tags=[{k:'ALL',l:'Semua'},{k:'X',l:'Kelas X · Fase E'},{k:'XI',l:'Kelas XI · Fase F'},{k:'XII',l:'Kelas XII · Fase F'}];
+  tagWrap.innerHTML=tags.map(t=>`<span class="tag ${perangkatFilter===t.k?'active':''}" onclick="perangkatFilter='${t.k}';render()">${t.l}</span>`).join('');
+
+  const list=document.getElementById('perangkatList');
+  const items=state.perangkat.filter(p=>perangkatFilter==='ALL'||p.tingkat===perangkatFilter)
+    .sort((a,b)=>(b.tanggal||'').localeCompare(a.tanggal||''));
+  if(items.length===0){ list.innerHTML=`<div class="empty">Belum ada dokumen perangkat pembelajaran untuk kategori ini.</div>`; return; }
+
+  const byKategori={};
+  items.forEach(p=>{ (byKategori[p.kategori]=byKategori[p.kategori]||[]).push(p); });
+  list.innerHTML = Object.entries(byKategori).map(([kat,arr])=>`
+    <div class="card">
+      <h3>${kat}</h3>
+      <div class="table-wrap"><table>
+        <tr><th style="width:90px">Kelas</th><th>Judul</th><th>Catatan / Isi</th><th style="width:100px">Tanggal</th><th style="width:90px"></th></tr>
+        ${arr.map(p=>`<tr>
+          <td>${tingkatBadge(p.tingkat)}</td>
+          <td><b>${p.judul}</b></td>
+          <td style="max-width:340px">${(p.isi||'').replace(/</g,'&lt;')}</td>
+          <td>${fmtDateShort(p.tanggal)}</td>
+          <td><div class="btn-row">
+            <button class="btn-ghost btn-sm" onclick="modalEditPerangkat('${p.id}')">Edit</button>
+            <button class="btn-danger btn-sm" onclick="hapusPerangkat('${p.id}')">✕</button>
+          </div></td>
+        </tr>`).join('')}
+      </table></div>
+    </div>`).join('');
+}
+function modalTambahPerangkat(){
+  openModal(`
+    <h3>Tambah Perangkat Pembelajaran</h3>
+    <div class="field"><label>Kelas / Fase</label><select id="fTingkat">
+      <option value="X">Kelas X — Fase E (Dasar-dasar Keahlian)</option>
+      <option value="XI">Kelas XI — Fase F (Kreatifitas, Inovatif & Kewirausahaan)</option>
+      <option value="XII">Kelas XII — Fase F (Kreatifitas, Inovatif & Kewirausahaan)</option>
+    </select></div>
+    <div class="field"><label>Kategori</label><select id="fKategori">${PERANGKAT_KATEGORI.map(k=>`<option>${k}</option>`).join('')}</select></div>
+    <div class="field"><label>Judul Dokumen</label><input type="text" id="fJudul" placeholder="mis. ATP Semester Ganjil - Elemen Proses Bisnis DKV"></div>
+    <div class="field"><label>Catatan / Ringkasan Isi</label><textarea id="fIsi" placeholder="Ringkasan materi, tujuan pembelajaran, atau tautan berkas"></textarea></div>
+    <div class="field"><label>Tanggal</label><input type="date" id="fTanggal" value="${todayStr()}"></div>
+    <button class="btn-primary" onclick="simpanPerangkat()">Simpan</button>`);
+}
+function modalEditPerangkat(id){
+  const p=state.perangkat.find(x=>x.id===id);
+  openModal(`
+    <h3>Edit Dokumen</h3>
+    <div class="field"><label>Kelas / Fase</label><select id="fTingkat">
+      ${['X','XI','XII'].map(t=>`<option value="${t}" ${t===p.tingkat?'selected':''}>Kelas ${t} — Fase ${FASE[t].fase}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Kategori</label><select id="fKategori">${PERANGKAT_KATEGORI.map(k=>`<option ${k===p.kategori?'selected':''}>${k}</option>`).join('')}</select></div>
+    <div class="field"><label>Judul Dokumen</label><input type="text" id="fJudul" value="${p.judul}"></div>
+    <div class="field"><label>Catatan / Ringkasan Isi</label><textarea id="fIsi">${p.isi||''}</textarea></div>
+    <div class="field"><label>Tanggal</label><input type="date" id="fTanggal" value="${p.tanggal}"></div>
+    <button class="btn-primary" onclick="simpanPerangkat('${id}')">Simpan Perubahan</button>`);
+}
+function simpanPerangkat(id){
+  const data={
+    tingkat:document.getElementById('fTingkat').value,
+    kategori:document.getElementById('fKategori').value,
+    judul:document.getElementById('fJudul').value.trim(),
+    isi:document.getElementById('fIsi').value.trim(),
+    tanggal:document.getElementById('fTanggal').value||todayStr(),
+  };
+  if(!data.judul){ toast('Judul wajib diisi'); return; }
+  if(id){ Object.assign(state.perangkat.find(x=>x.id===id),data); }
+  else { state.perangkat.push({id:uid(),...data}); }
+  saveState(true); closeModal(); render();
+}
+function hapusPerangkat(id){
+  if(!confirm('Hapus dokumen ini?')) return;
+  state.perangkat=state.perangkat.filter(p=>p.id!==id);
+  saveState(true); render();
+}
+
+/* ============================ ABSENSI ============================ */
+let absensiKelas=null, absensiTanggal=todayStr();
+function renderAbsensi(c){
+  if(!absensiKelas && state.kelas.length) absensiKelas=state.kelas[0].id;
+  c.innerHTML=`
+  <div class="card">
+    <div class="grid cols-2">
+      <div class="field"><label>Pilih Kelas</label><select id="selKelas" onchange="absensiKelas=this.value;render()">${kelasOptions(absensiKelas)}</select></div>
+      <div class="field"><label>Tanggal</label><input type="date" id="selTgl" value="${absensiTanggal}" onchange="absensiTanggal=this.value;render()"></div>
+    </div>
+  </div>`;
+  if(!state.kelas.length){ document.getElementById('content').innerHTML+=`<div class="empty">Tambahkan kelas terlebih dahulu di menu Data Kelas.</div>`; return; }
+  const siswa=getSiswa(absensiKelas);
+  state.absensi[absensiKelas]=state.absensi[absensiKelas]||{};
+  state.absensi[absensiKelas][absensiTanggal]=state.absensi[absensiKelas][absensiTanggal]||{};
+  const rec=state.absensi[absensiKelas][absensiTanggal];
+
+  const card=document.createElement('div');
+  card.className='card';
+  const hadirCount=siswa.filter(s=>(rec[s.id]||'H')==='H').length;
+  card.innerHTML=`
+    <div class="toolbar">
+      <h3 style="margin:0">${fmtDate(absensiTanggal)} — Hadir ${hadirCount}/${siswa.length}</h3>
+      <div class="btn-row">
+        <button class="btn-teal btn-sm" onclick="tandaiSemuaHadir()">Tandai Semua Hadir</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <tr><th style="width:40px">No</th><th>Nama</th><th style="width:150px">Status</th></tr>
+      ${siswa.length===0?`<tr><td colspan="3" style="text-align:center;color:var(--muted)">Belum ada siswa di kelas ini</td></tr>`:
+      siswa.map((s,idx)=>{
+        const st=rec[s.id]||'H';
+        return `<tr><td>${idx+1}</td><td>${s.nama}</td><td>
+          <div class="att-btns">
+            ${['H','S','I','A'].map(code=>`<button class="att-btn ${st===code?'on-'+code.toLowerCase():''}" onclick="setAbsen('${s.id}','${code}')">${code}</button>`).join('')}
+          </div>
+        </td></tr>`;
+      }).join('')}
+    </table></div>`;
+  document.getElementById('content').appendChild(card);
+
+  // recap card
+  const rekapCard=document.createElement('div');
+  rekapCard.className='card';
+  const bulan=absensiTanggal.slice(0,7);
+  const rekapRows=siswa.map(s=>{
+    let h=0,sk=0,iz=0,al=0;
+    Object.entries(state.absensi[absensiKelas]).forEach(([tgl,r])=>{
+      if(tgl.slice(0,7)!==bulan) return;
+      const v=r[s.id]||'H';
+      if(v==='H')h++; else if(v==='S')sk++; else if(v==='I')iz++; else if(v==='A')al++;
+    });
+    return {nama:s.nama,h,sk,iz,al};
+  });
+  rekapCard.innerHTML=`
+    <h3>Rekap Bulan ${new Date(bulan+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'})}</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Nama</th><th>H</th><th>S</th><th>I</th><th>A</th></tr>
+      ${rekapRows.map(r=>`<tr><td>${r.nama}</td><td>${r.h}</td><td>${r.sk}</td><td>${r.iz}</td><td>${r.al}</td></tr>`).join('')}
+    </table></div>`;
+  document.getElementById('content').appendChild(rekapCard);
+}
+function setAbsen(siswaId,code){
+  state.absensi[absensiKelas][absensiTanggal][siswaId]=code;
+  saveState(); render();
+}
+function tandaiSemuaHadir(){
+  const siswa=getSiswa(absensiKelas);
+  const rec=state.absensi[absensiKelas][absensiTanggal];
+  siswa.forEach(s=>rec[s.id]='H');
+  saveState(true); render();
+}
+
+/* ============================ NILAI ============================ */
+let nilaiKelas=null;
+function renderNilai(c){
+  if(!nilaiKelas && state.kelas.length) nilaiKelas=state.kelas[0].id;
+  c.innerHTML=`
+  <div class="card">
+    <div class="field"><label>Pilih Kelas</label><select id="selKelasN" onchange="nilaiKelas=this.value;render()">${kelasOptions(nilaiKelas)}</select></div>
+  </div>`;
+  if(!state.kelas.length){ document.getElementById('content').innerHTML+=`<div class="empty">Tambahkan kelas terlebih dahulu di menu Data Kelas.</div>`; return; }
+
+  state.komponenNilai[nilaiKelas]=state.komponenNilai[nilaiKelas]||[];
+  state.nilai[nilaiKelas]=state.nilai[nilaiKelas]||{};
+  const komp=state.komponenNilai[nilaiKelas];
+  const siswa=getSiswa(nilaiKelas);
+
+  const card=document.createElement('div');
+  card.className='card';
+  card.innerHTML=`
+    <div class="toolbar">
+      <h3 style="margin:0">Komponen Penilaian</h3>
+      <button class="btn-primary btn-sm" onclick="modalTambahKomponen()">+ Tambah Komponen</button>
+    </div>
+    ${komp.length===0?`<div class="empty">Belum ada komponen nilai (mis. Tugas 1, UH 1, PTS, PAS, Proyek). Tambahkan komponen dahulu.</div>`:
+    `<div class="table-wrap"><table>
+      <tr><th style="width:40px">No</th><th>Nama</th>
+        ${komp.map(k=>`<th>${k.nama}</th>`).join('')}
+        <th style="width:70px">Rata²</th>
+      </tr>
+      ${siswa.map((s,idx)=>{
+        const vals=komp.map(k=>Number((state.nilai[nilaiKelas][k.id]||{})[s.id]||0));
+        const validVals=vals.filter((v,i)=> (state.nilai[nilaiKelas][komp[i].id]||{})[s.id]!==undefined && (state.nilai[nilaiKelas][komp[i].id]||{})[s.id]!=='');
+        const avg = validVals.length? (validVals.reduce((a,b)=>a+b,0)/validVals.length).toFixed(1) : '-';
+        return `<tr><td>${idx+1}</td><td>${s.nama}</td>
+          ${komp.map(k=>`<td><input type="number" min="0" max="100" style="width:64px;padding:5px" value="${(state.nilai[nilaiKelas][k.id]||{})[s.id]??''}" onchange="setNilai('${k.id}','${s.id}',this.value)"></td>`).join('')}
+          <td class="avg-cell">${avg}</td>
+        </tr>`;
+      }).join('')}
+    </table></div>`}
+    ${komp.length>0?`<div class="btn-row"><button class="btn-ghost btn-sm" onclick="modalKelolaKomponen()">Kelola Komponen</button></div>`:''}
+  `;
+  document.getElementById('content').appendChild(card);
+}
+function setNilai(kompId,siswaId,val){
+  state.nilai[nilaiKelas][kompId]=state.nilai[nilaiKelas][kompId]||{};
+  state.nilai[nilaiKelas][kompId][siswaId]=val;
+  saveState();
+}
+function modalTambahKomponen(){
+  openModal(`
+    <h3>Tambah Komponen Nilai</h3>
+    <div class="field"><label>Nama Komponen</label><input type="text" id="fNamaKomp" placeholder="mis. Ulangan Harian 1 / Proyek DKV"></div>
+    <div class="field"><label>Tanggal</label><input type="date" id="fTglKomp" value="${todayStr()}"></div>
+    <button class="btn-primary" onclick="simpanKomponen()">Simpan</button>`);
+}
+function simpanKomponen(){
+  const nama=document.getElementById('fNamaKomp').value.trim();
+  if(!nama){ toast('Nama komponen wajib diisi'); return; }
+  state.komponenNilai[nilaiKelas].push({id:uid(),nama,tanggal:document.getElementById('fTglKomp').value});
+  saveState(true); closeModal(); render();
+}
+function modalKelolaKomponen(){
+  const komp=state.komponenNilai[nilaiKelas];
+  openModal(`
+    <h3>Kelola Komponen</h3>
+    ${komp.map(k=>`<div class="field" style="display:flex;justify-content:space-between;align-items:center">
+      <span>${k.nama} <span class="small-muted">(${fmtDateShort(k.tanggal)})</span></span>
+      <button class="btn-danger btn-sm" onclick="hapusKomponen('${k.id}')">Hapus</button>
+    </div>`).join('')}
+  `);
+}
+function hapusKomponen(id){
+  if(!confirm('Hapus komponen nilai ini beserta seluruh nilainya?')) return;
+  state.komponenNilai[nilaiKelas]=state.komponenNilai[nilaiKelas].filter(k=>k.id!==id);
+  delete state.nilai[nilaiKelas][id];
+  saveState(true); closeModal(); render();
+}
+
+/* ============================ JURNAL MENGAJAR ============================ */
+function renderJurnal(c){
+  c.innerHTML=`
+  <div class="toolbar">
+    <div class="small-muted">${state.jurnal.length} entri jurnal</div>
+    <button class="btn-primary" onclick="modalTambahJurnal()">+ Isi Jurnal Hari Ini</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table>
+      <tr><th>No</th><th>Hari/Tanggal</th><th>Jam</th><th>Kelas</th><th>Tujuan Pembelajaran</th><th>Pelaksanaan</th><th>Tdk Hadir (A/I/S)</th><th>Hadir</th><th></th></tr>
+      ${state.jurnal.length===0?`<tr><td colspan="9" style="text-align:center;color:var(--muted)">Belum ada entri jurnal</td></tr>`:
+      [...state.jurnal].sort((a,b)=>b.tanggal.localeCompare(a.tanggal)).map(j=>{
+        const k=state.kelas.find(x=>x.id===j.kelasId);
+        return `<tr>
+          <td>${j.no}</td><td>${fmtDateShort(j.tanggal)}<br><span class="small-muted">${j.hari||''}</span></td>
+          <td>${j.jamKe||'-'}</td><td>${k?k.nama:'-'}</td>
+          <td style="max-width:200px">${j.tujuan||'-'}</td>
+          <td style="max-width:200px">${j.pelaksanaan||'-'}</td>
+          <td>A:${j.tidakHadir.a||0} I:${j.tidakHadir.i||0} S:${j.tidakHadir.s||0}</td>
+          <td>${j.jmlHadir}</td>
+          <td><div class="btn-row">
+            <button class="btn-ghost btn-sm" onclick="modalEditJurnal('${j.id}')">Edit</button>
+            <button class="btn-danger btn-sm" onclick="hapusJurnal('${j.id}')">✕</button>
+          </div></td>
+        </tr>`;
+      }).join('')}
+    </table></div>
+  </div>`;
+}
+function jurnalForm(j){
+  const kelasId=j?j.kelasId:(state.kelas[0]?state.kelas[0].id:'');
+  const siswaCount=getSiswa(kelasId).length;
+  return `
+    <h3>${j?'Edit':'Isi'} Jurnal Mengajar</h3>
+    <div class="grid cols-2">
+      <div class="field"><label>Tanggal</label><input type="date" id="fTglJ" value="${j?j.tanggal:todayStr()}" onchange="updateHariField()"></div>
+      <div class="field"><label>Hari</label><input type="text" id="fHariJ" value="${j?j.hari:hariDariTanggal(todayStr())}" readonly></div>
+      <div class="field"><label>Jam Ke</label><input type="text" id="fJamJ" value="${j?j.jamKe:''}" placeholder="mis. 1-2"></div>
+      <div class="field"><label>Kelas</label><select id="fKelasJ">${kelasOptions(kelasId)}</select></div>
+    </div>
+    <div class="field"><label>Tujuan Pembelajaran</label><textarea id="fTujuanJ">${j?j.tujuan:''}</textarea></div>
+    <div class="field"><label>Pelaksanaan Kegiatan (tulis pelaksanaan dan tindak lanjut)</label><textarea id="fPelaksanaanJ">${j?j.pelaksanaan:''}</textarea></div>
+    <div class="field"><label>Sumber / Media Belajar</label><input type="text" id="fSumberJ" value="${j?j.sumber:''}"></div>
+    <div class="grid cols-3">
+      <div class="field"><label>Alpa</label><input type="number" min="0" id="fAJ" value="${j?j.tidakHadir.a:0}"></div>
+      <div class="field"><label>Izin</label><input type="number" min="0" id="fIJ" value="${j?j.tidakHadir.i:0}"></div>
+      <div class="field"><label>Sakit</label><input type="number" min="0" id="fSJ" value="${j?j.tidakHadir.s:0}"></div>
+    </div>
+    <div class="small-muted" style="margin:-6px 0 12px">Jumlah siswa hadir dihitung otomatis dari total siswa kelas dikurangi A/I/S.</div>
+    <div class="field"><label>Catatan</label><textarea id="fCatatanJ">${j?j.catatan:''}</textarea></div>
+    <button class="btn-primary" onclick="simpanJurnal(${j?`'${j.id}'`:'null'})">Simpan</button>`;
+}
+function hariDariTanggal(tgl){
+  return new Date(tgl+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long'});
+}
+function updateHariField(){
+  document.getElementById('fHariJ').value = hariDariTanggal(document.getElementById('fTglJ').value);
+}
+function modalTambahJurnal(){ openModal(jurnalForm(null)); }
+function modalEditJurnal(id){ openModal(jurnalForm(state.jurnal.find(x=>x.id===id))); }
+function simpanJurnal(id){
+  const kelasId=document.getElementById('fKelasJ').value;
+  const a=Number(document.getElementById('fAJ').value)||0;
+  const i=Number(document.getElementById('fIJ').value)||0;
+  const s=Number(document.getElementById('fSJ').value)||0;
+  const totalSiswa=getSiswa(kelasId).length;
+  const jmlHadir=Math.max(totalSiswa-a-i-s,0);
+  const data={
+    tanggal:document.getElementById('fTglJ').value,
+    hari:document.getElementById('fHariJ').value,
+    jamKe:document.getElementById('fJamJ').value,
+    kelasId, tujuan:document.getElementById('fTujuanJ').value,
+    pelaksanaan:document.getElementById('fPelaksanaanJ').value,
+    sumber:document.getElementById('fSumberJ').value,
+    tidakHadir:{a,i,s}, jmlHadir,
+    catatan:document.getElementById('fCatatanJ').value
+  };
+  if(id){ Object.assign(state.jurnal.find(x=>x.id===id),data); }
+  else { data.no=state.jurnal.length+1; data.id=uid(); state.jurnal.push(data); }
+  saveState(true); closeModal(); render();
+}
+function hapusJurnal(id){
+  if(!confirm('Hapus entri jurnal ini?')) return;
+  state.jurnal=state.jurnal.filter(j=>j.id!==id);
+  state.jurnal.forEach((j,idx)=>j.no=idx+1);
+  saveState(true); render();
+}
+
+/* ============================ REKAP & CETAK ============================ */
+let rekapKelas=null, rekapBulan=todayStr().slice(0,7);
+function renderRekap(c){
+  if(!rekapKelas && state.kelas.length) rekapKelas=state.kelas[0].id;
+  c.innerHTML=`
+  <div class="card no-print">
+    <div class="grid cols-3">
+      <div class="field"><label>Pilih Kelas</label><select id="selKelasR" onchange="rekapKelas=this.value;render()">${kelasOptions(rekapKelas)}</select></div>
+      <div class="field"><label>Bulan</label><input type="month" id="selBulanR" value="${rekapBulan}" onchange="rekapBulan=this.value;render()"></div>
+      <div class="field" style="display:flex;align-items:flex-end"><button class="btn-primary" style="width:100%" onclick="window.print()">🖨️ Cetak Halaman Ini</button></div>
+    </div>
+  </div>`;
+  if(!state.kelas.length){ document.getElementById('content').innerHTML+=`<div class="empty">Belum ada kelas.</div>`; return; }
+  const k=state.kelas.find(x=>x.id===rekapKelas);
+  const siswa=getSiswa(rekapKelas);
+
+  // build tanggal list in month that have absensi
+  const dataBulan=state.absensi[rekapKelas]||{};
+  const tglList=Object.keys(dataBulan).filter(t=>t.startsWith(rekapBulan)).sort();
+
+  const absCard=document.createElement('div');
+  absCard.className='card';
+  absCard.innerHTML=`
+    <h3>Rekap Kehadiran — ${k.nama} — ${new Date(rekapBulan+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'})}</h3>
+    <div class="table-wrap"><table>
+      <tr><th>No</th><th>Nama</th>${tglList.map(t=>`<th>${t.slice(8)}</th>`).join('')}<th>H</th><th>S</th><th>I</th><th>A</th></tr>
+      ${siswa.length===0||tglList.length===0?`<tr><td colspan="${3+tglList.length+4}" style="text-align:center;color:var(--muted)">Tidak ada data absensi bulan ini</td></tr>`:
+      siswa.map((s,idx)=>{
+        let h=0,sk=0,iz=0,al=0;
+        const cells=tglList.map(t=>{
+          const v=(dataBulan[t]||{})[s.id]||'H';
+          if(v==='H')h++; else if(v==='S')sk++; else if(v==='I')iz++; else if(v==='A')al++;
+          return `<td>${v}</td>`;
+        }).join('');
+        return `<tr><td>${idx+1}</td><td>${s.nama}</td>${cells}<td>${h}</td><td>${sk}</td><td>${iz}</td><td>${al}</td></tr>`;
+      }).join('')}
+    </table></div>`;
+  document.getElementById('content').appendChild(absCard);
+
+  // rekap nilai
+  const komp=state.komponenNilai[rekapKelas]||[];
+  const nilaiCard=document.createElement('div');
+  nilaiCard.className='card';
+  nilaiCard.innerHTML=`
+    <h3>Rekap Nilai — ${k.nama}</h3>
+    <div class="table-wrap"><table>
+      <tr><th>No</th><th>Nama</th>${komp.map(kk=>`<th>${kk.nama}</th>`).join('')}<th>Rata²</th></tr>
+      ${siswa.length===0||komp.length===0?`<tr><td colspan="${3+komp.length}" style="text-align:center;color:var(--muted)">Belum ada data nilai</td></tr>`:
+      siswa.map((s,idx)=>{
+        const vals=komp.map(kk=>(state.nilai[rekapKelas]&&state.nilai[rekapKelas][kk.id]||{})[s.id]);
+        const validVals=vals.filter(v=>v!==undefined&&v!=='').map(Number);
+        const avg=validVals.length?(validVals.reduce((a,b)=>a+b,0)/validVals.length).toFixed(1):'-';
+        return `<tr><td>${idx+1}</td><td>${s.nama}</td>${vals.map(v=>`<td>${v??'-'}</td>`).join('')}<td class="avg-cell">${avg}</td></tr>`;
+      }).join('')}
+    </table></div>`;
+  document.getElementById('content').appendChild(nilaiCard);
+
+  // rekap jurnal
+  const jurnalKelas=state.jurnal.filter(j=>j.kelasId===rekapKelas && j.tanggal.startsWith(rekapBulan));
+  const jCard=document.createElement('div');
+  jCard.className='card';
+  jCard.innerHTML=`
+    <h3>Buku Agenda Mengajar — ${k.nama}</h3>
+    <div class="table-wrap"><table>
+      <tr><th>No</th><th>Hari/Tgl</th><th>Jam</th><th>Tujuan Pembelajaran</th><th>Pelaksanaan Kegiatan</th><th>Sumber Media</th><th>A</th><th>I</th><th>S</th><th>Hadir</th><th>Catatan</th></tr>
+      ${jurnalKelas.length===0?`<tr><td colspan="11" style="text-align:center;color:var(--muted)">Tidak ada entri jurnal bulan ini</td></tr>`:
+      jurnalKelas.map(j=>`<tr>
+        <td>${j.no}</td><td>${j.hari}<br>${fmtDateShort(j.tanggal)}</td><td>${j.jamKe}</td>
+        <td style="max-width:180px">${j.tujuan}</td><td style="max-width:180px">${j.pelaksanaan}</td><td>${j.sumber}</td>
+        <td>${j.tidakHadir.a}</td><td>${j.tidakHadir.i}</td><td>${j.tidakHadir.s}</td><td>${j.jmlHadir}</td><td>${j.catatan}</td>
+      </tr>`).join('')}
+    </table></div>`;
+  document.getElementById('content').appendChild(jCard);
+}
+
+/* ============================ PENGATURAN ============================ */
+function renderPengaturan(c){
+  const s=state.settings;
+  c.innerHTML=`
+  <div class="card">
+    <h3>Identitas Guru & Sekolah</h3>
+    <div class="grid cols-2">
+      <div class="field"><label>Nama Guru</label><input type="text" id="pNama" value="${s.namaGuru}"></div>
+      <div class="field"><label>NIP</label><input type="text" id="pNip" value="${s.nip}"></div>
+      <div class="field"><label>Nama Sekolah</label><input type="text" id="pSekolah" value="${s.sekolah}"></div>
+      <div class="field"><label>Program Keahlian</label><input type="text" id="pProgram" value="${s.programKeahlian}"></div>
+      <div class="field"><label>Tahun Pelajaran</label><input type="text" id="pTA" value="${s.tahunAjaran}" placeholder="2026/2027"></div>
+      <div class="field"><label>Semester</label><select id="pSem"><option ${s.semester==='Ganjil'?'selected':''}>Ganjil</option><option ${s.semester==='Genap'?'selected':''}>Genap</option></select></div>
+    </div>
+    <button class="btn-primary" onclick="simpanPengaturan()">Simpan Pengaturan</button>
+  </div>
+
+  <div class="card">
+    <h3>Mata Pelajaran per Fase</h3>
+    <ul class="stat-list">
+      <li><span>Kelas X · Fase E</span><span>Dasar-dasar Keahlian DKV</span></li>
+      <li><span>Kelas XI · Fase F</span><span>Kreatifitas, Inovatif dan Kewirausahaan</span></li>
+      <li><span>Kelas XII · Fase F</span><span>Kreatifitas, Inovatif dan Kewirausahaan</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Cadangan Data</h3>
+    <div class="desc">Unduh seluruh data aplikasi sebagai berkas cadangan, atau pulihkan dari berkas cadangan.</div>
+    <div class="btn-row">
+      <button class="btn-teal" onclick="exportData()">⬇ Unduh Cadangan (JSON)</button>
+      <button class="btn-ghost" onclick="document.getElementById('importFile').click()">⬆ Pulihkan dari Berkas</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(this)">
+      <button class="btn-danger" onclick="resetData()">Hapus Semua Data</button>
+    </div>
+  </div>`;
+}
+function simpanPengaturan(){
+  state.settings.namaGuru=document.getElementById('pNama').value;
+  state.settings.nip=document.getElementById('pNip').value;
+  state.settings.sekolah=document.getElementById('pSekolah').value;
+  state.settings.programKeahlian=document.getElementById('pProgram').value;
+  state.settings.tahunAjaran=document.getElementById('pTA').value;
+  state.settings.semester=document.getElementById('pSem').value;
+  saveState(true); render();
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`backup-smartguru-dkv-${todayStr()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+}
+function importData(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!confirm('Ini akan menimpa seluruh data yang ada. Lanjutkan?')) return;
+      state=data; saveState(true); render(); toast('Data berhasil dipulihkan');
+    }catch(err){ toast('Berkas tidak valid'); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+function resetData(){
+  if(!confirm('Semua data (kelas, siswa, absensi, nilai, jurnal) akan dihapus permanen. Lanjutkan?')) return;
+  if(!confirm('Konfirmasi sekali lagi: hapus SEMUA data?')) return;
+  state=defaultState(); saveState(true); render();
+}
+
+/* ============================ INIT ============================ */
+(async function init(){
+  await loadState();
+  document.getElementById('loading').style.display='none';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('main').style.display='flex';
+  render();
+})();
+</script>
+</body>
+</html>
