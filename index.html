@@ -1290,6 +1290,9 @@ function renderPengaturan(c){
       <div class="field"><label>Semester</label><select id="pSem"><option ${s.semester==='Ganjil'?'selected':''}>Ganjil</option><option ${s.semester==='Genap'?'selected':''}>Genap</option></select></div>
     </div>
     <button class="btn-primary" onclick="simpanPengaturan()">Simpan Pengaturan</button>
+    <button onclick="exportData()">Download Backup</button>
+   <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
+   <button onclick="document.getElementById('importFile').click()">Import Backup</button>
   </div>
 
   <div class="card">
@@ -1390,6 +1393,7 @@ function resetData(){
   render();
 })();
 </script>
+  <script src="backup-restore.js"></script>
 </body>
 </html>
 
