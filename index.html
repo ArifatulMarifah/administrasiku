@@ -271,21 +271,31 @@ function defaultState(){
 
 async function loadState(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){ state = JSON.parse(res.value); }
-    else { state = defaultState(); }
-  }catch(e){ state = defaultState(); }
-  // migrate/ensure keys
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      state = JSON.parse(raw);
+    } else {
+      state = defaultState();
+    }
+  }catch(e){
+    state = defaultState();
+  }
   const d = defaultState();
-  for(const k in d){ if(!(k in state)) state[k]=d[k]; }
+  for(const k in d){
+    if(!(k in state)) state[k] = d[k];
+  }
 }
+
 function saveState(showToast){
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(async()=>{
+  saveTimer = setTimeout(()=>{
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       if(showToast) toast('Tersimpan');
-    }catch(e){ toast('Gagal menyimpan data'); }
+    }catch(e){
+      toast('Gagal menyimpan data');
+      console.error(e);
+    }
   }, 250);
 }
 function toast(msg){
